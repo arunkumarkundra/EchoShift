@@ -12,6 +12,7 @@ let timeLeft = 5;
 let player = { x: 0, y: 0 };
 let goal = { x: 0, y: 0 };
 let maze = [];
+let ghosts = [];
 let gameRunning = false;
 
 // Load images
@@ -20,6 +21,9 @@ playerImg.src = "assets/player.png";
 
 const goalImg = new Image();
 goalImg.src = "assets/goal.png";
+
+const ghostImg = new Image();
+ghostImg.src = "assets/ghost.png";
 
 // Timer Logic
 function startTimer() {
@@ -38,18 +42,42 @@ function startTimer() {
     }, 1000);
 }
 
-// Generate Proper Maze (White = Walkable, Black = Wall)
+// Generate a Proper Maze with Corridors
 function generateMaze() {
-    let newMaze = Array.from({ length: gridSize }, () =>
-        Array.from({ length: gridSize }, () => (Math.random() > 0.7 ? 1 : 0)) // 1 = Wall, 0 = Walkable
-    );
+    let newMaze = Array(gridSize).fill().map(() => Array(gridSize).fill(1)); // Start with all walls
+
+    function carvePassage(x, y) {
+        const directions = [
+            { dx: 1, dy: 0 },
+            { dx: -1, dy: 0 },
+            { dx: 0, dy: 1 },
+            { dx: 0, dy: -1 },
+        ].sort(() => Math.random() - 0.5); // Randomize direction order
+
+        newMaze[y][x] = 0; // Make this a white (walkable) cell
+
+        for (const { dx, dy } of directions) {
+            const nx = x + dx * 2;
+            const ny = y + dy * 2;
+            if (nx >= 0 && ny >= 0 && nx < gridSize && ny < gridSize && newMaze[ny][nx] === 1) {
+                newMaze[y + dy][x + dx] = 0; // Open path in between
+                carvePassage(nx, ny);
+            }
+        }
+    }
+
+    // Start carving from a random odd cell
+    let startX = 1 + 2 * Math.floor(Math.random() * (gridSize / 2));
+    let startY = 1 + 2 * Math.floor(Math.random() * (gridSize / 2));
+    carvePassage(startX, startY);
+
     ensureValidMaze(newMaze);
     return newMaze;
 }
 
 // Ensure Maze is Playable
 function ensureValidMaze(newMaze) {
-    newMaze[player.y][player.x] = 0; // Ensure player starts in a white cell
+    newMaze[player.y][player.x] = 0; // Ensure player remains in a walkable cell
     newMaze[goal.y][goal.x] = 0; // Ensure goal remains accessible
 }
 
@@ -61,7 +89,7 @@ function placeGoal(newMaze) {
     } while (newMaze[goal.y][goal.x] === 1);
 }
 
-// Draw Maze with Player & Goal
+// Draw Maze with Player, Goal & Ghosts
 function drawMaze() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -74,6 +102,8 @@ function drawMaze() {
 
     ctx.drawImage(goalImg, goal.x * cellSize, goal.y * cellSize, cellSize, cellSize);
     ctx.drawImage(playerImg, player.x * cellSize, player.y * cellSize, cellSize, cellSize);
+
+    ghosts.forEach(g => ctx.drawImage(ghostImg, g.x * cellSize, g.y * cellSize, cellSize, cellSize));
 }
 
 // Move Player
@@ -91,29 +121,62 @@ function movePlayer(dx, dy) {
     drawMaze();
 }
 
-// Level Up
+// Level Up Logic
 function levelUp() {
     level++;
+    document.getElementById("level").innerText = level;
     shiftInterval = Math.max(1000, shiftInterval - 500);
-    resetGame();
+    spawnGhosts();
+    shiftMaze();
 }
 
-// Shift Maze Without Changing Goal
+// Spawn Ghosts Progressively (Max 4)
+function spawnGhosts() {
+    if (ghosts.length < 4) {
+        let newGhost;
+        do {
+            newGhost = { x: Math.floor(Math.random() * gridSize), y: Math.floor(Math.random() * gridSize) };
+        } while (maze[newGhost.y][newGhost.x] === 1 || (newGhost.x === player.x && newGhost.y === player.y));
+        ghosts.push(newGhost);
+    }
+}
+
+// Move Ghosts Randomly
+function moveGhosts() {
+    ghosts.forEach(g => {
+        let directions = [
+            { dx: 1, dy: 0 },
+            { dx: -1, dy: 0 },
+            { dx: 0, dy: 1 },
+            { dx: 0, dy: -1 },
+        ];
+        let validMoves = directions.filter(({ dx, dy }) => {
+            let nx = g.x + dx;
+            let ny = g.y + dy;
+            return maze[ny] && maze[ny][nx] === 0;
+        });
+
+        if (validMoves.length > 0) {
+            let move = validMoves[Math.floor(Math.random() * validMoves.length)];
+            g.x += move.dx;
+            g.y += move.dy;
+        }
+    });
+
+    drawMaze();
+}
+
+// Shift Maze Without Changing Player or Goal
 function shiftMaze() {
     let newMaze = generateMaze();
-    while (newMaze[player.y][player.x] === 1) {
-        player.x = Math.floor(Math.random() * gridSize);
-        player.y = Math.floor(Math.random() * gridSize);
-    }
     maze = newMaze;
     drawMaze();
     timeLeft = 5;
 }
 
-// Reset Game
+// Reset Game Without Moving Player
 function resetGame() {
     gameRunning = true;
-    player = { x: 0, y: 0 };
     maze = generateMaze();
     placeGoal(maze);
     drawMaze();
@@ -136,3 +199,4 @@ document.addEventListener("keydown", (e) => {
 // Start Game
 resetGame();
 startTimer();
+setInterval(moveGhosts, 1000);
