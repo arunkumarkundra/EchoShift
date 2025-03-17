@@ -1,220 +1,34 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: Arial, sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background-color: #f0f0f0;
-    padding: 20px;
-}
-
+/* Same as original with adjustments for new canvas size and additional stats */
 .game-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: #fff;
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    max-width: 550px;
-    width: 100%;
-}
-
-.game-title {
-    font-size: 32px;
-    margin-bottom: 15px;
-    color: #333;
-    text-align: center;
+    max-width: 600px; /* Adjusted for 480px canvas */
 }
 
 .game-header {
     display: flex;
-    justify-content: space-between;
-    width: 100%;
-    margin-bottom: 15px;
-    font-size: 18px;
-    font-weight: bold;
-    background-color: #f5f5f5;
-    padding: 10px 15px;
-    border-radius: 8px;
-}
-
-.game-area {
-    position: relative;
-    width: 100%;
-    margin-bottom: 15px;
-    display: flex;
-    justify-content: center;
-}
-
-#gameCanvas {
-    border: 5px solid #000; /* Increased thickness for better visibility */
-    display: block;
-    margin: auto; /* Center the canvas */
-    
-    border: 3px solid #333;
-    background-color: #fff;
-    border-radius: 5px;
-    max-width: 100%;
-    height: auto;
-}
-
-.instructions {
-    margin: 15px 0;
-    font-size: 14px;
-    text-align: center;
-    color: #555;
-    background-color: #f9f9f9;
-    padding: 10px;
-    border-radius: 8px;
-    width: 100%;
-}
-
-.mobile-controls {
-    display: none;
-    margin-top: 20px;
-    width: 100%;
-    max-width: 280px;
-}
-
-.horizontal-controls {
-    display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
 }
 
-.mobile-controls button {
-    width: 70px;
-    height: 70px;
-    font-size: 28px;
-    background-color: #333;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    margin: 5px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: background-color 0.2s;
-}
-
-.mobile-controls button:active {
-    background-color: #555;
-}
-
-#up-btn, #down-btn {
-    margin: 0 auto;
-}
-
-.game-over-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 100;
-}
-
-.game-over-content {
-    background-color: white;
-    padding: 30px;
-    border-radius: 15px;
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
-}
-
-.game-over-content h2 {
-    margin-bottom: 20px;
-    font-size: 28px;
-    color: #333;
+.stats {
+    margin: 5px 0;
 }
 
 .game-over-content p {
-    margin-bottom: 20px;
-    font-size: 20px;
-    color: #555;
+    margin-bottom: 10px;
 }
 
-#playerName {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 25px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-}
-
-.game-over-buttons {
-    display: flex;
-    justify-content: space-around;
-}
-
-.game-over-buttons button {
-    padding: 12px 25px;
-    font-size: 16px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    background-color: #333;
-    color: white;
-    transition: background-color 0.2s;
-}
-
-.game-over-buttons button:hover {
-    background-color: #555;
-}
-
-/* Mobile Responsiveness */
-@media (max-width: 768px) {
-    .game-container {
-        padding: 15px;
-    }
-    
-    .game-title {
-        font-size: 24px;
-    }
-    
-    .game-header {
-        font-size: 16px;
-    }
-    
-    #gameCanvas {
-    border: 5px solid #000; /* Increased thickness for better visibility */
+#finalSteps, #finalTime {
     display: block;
-    margin: auto; /* Center the canvas */
-    
-        width: 100%;
-        height: auto;
-    }
-    
-    .mobile-controls {
-        display: block;
-    }
-    
-    .game-over-content {
-        padding: 20px;
-    }
-    
-    .game-over-content h2 {
-        font-size: 24px;
-    }
+    margin: 5px 0;
 }
 
-/* Make sure mobile controls are visible on touch devices */
-@media (hover: none) and (pointer: coarse) {
-    .mobile-controls {
-        display: block;
+@media (max-width: 768px) {
+    .game-header {
+        font-size: 14px;
+    }
+    .mobile-controls button {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
     }
 }
