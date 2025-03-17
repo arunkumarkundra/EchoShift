@@ -6,11 +6,12 @@ body {
 }
 
 canvas {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.2);
     border: 2px solid white;
     margin-top: 10px;
 }
 
+/* Make mobile controls more visible */
 #mobileControls {
     display: flex;
     flex-direction: column;
@@ -19,20 +20,40 @@ canvas {
 }
 
 #mobileControls button {
-    background: grey;
+    background: #444;
+    color: white;
     border: none;
     padding: 15px;
     font-size: 20px;
     margin: 5px;
     cursor: pointer;
+    border-radius: 5px;
 }
 
+#mobileControls button:hover {
+    background: #666;
+}
+
+/* Hide mobile controls on desktop */
+@media (min-width: 600px) {
+    #mobileControls {
+        display: none;
+    }
+}
+
+/* Timer & Level Display */
+p {
+    font-size: 18px;
+    margin: 5px 0;
+}
+
+/* Game Over Screen */
 .hidden {
     display: none;
 }
 
 #gameOverScreen {
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.9);
     color: white;
     position: fixed;
     top: 30%;
@@ -40,5 +61,21 @@ canvas {
     transform: translate(-50%, -50%);
     padding: 20px;
     border: 2px solid white;
+    text-align: center;
+    box-shadow: 0px 0px 10px white;
 }
 
+#gameOverScreen button {
+    background: #ff4444;
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    font-size: 16px;
+    margin-top: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+#gameOverScreen button:hover {
+    background: #cc0000;
+}
