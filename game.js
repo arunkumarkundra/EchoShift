@@ -188,7 +188,7 @@ function addGhost() {
 function moveGhosts() {
     for (let ghost of ghosts) {
         if (!ghost.direction || !isValidMove(ghost.x + ghost.direction.x, ghost.y + ghost.direction.y)) {
-            const directions = level >= 15 ? getPathfindingDirection(ghost) : getRandomDirection();
+            const directions = level >= 20 ? getPathfindingDirection(ghost) : getRandomDirection();
             for (const dir of directions) {
                 if (isValidMove(ghost.x + dir.x, ghost.y + dir.y)) {
                     ghost.direction = dir;
@@ -277,7 +277,7 @@ function levelUp() {
     if (change === 0) shiftInterval = Math.max(MIN_SHIFT_INTERVAL, shiftInterval - 1);
     else if (change === 1) {} // Wall density increases in generateMaze
     else if (change === 2) updateGhosts();
-    else if (change === 3 && level >= 15) {} // Ghost behavior changes in moveGhosts
+    else if (change === 3 && level >= 20) {} // Ghost behavior changes in moveGhosts
 
     timer = shiftInterval;
     document.getElementById('level').textContent = level;
