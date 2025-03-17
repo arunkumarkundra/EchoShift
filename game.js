@@ -8,11 +8,10 @@ const gridSize = 10;
 const cellSize = canvas.width / gridSize;
 let level = 1;
 let shiftInterval = 5000;
-let timeLeft = shiftInterval / 1000;
+let timeLeft = 5;
 let player = { x: 0, y: 0 };
 let goal = { x: 0, y: 0 };
 let maze = [];
-let ghosts = [];
 let gameRunning = true;
 
 // Load images
@@ -21,9 +20,6 @@ playerImg.src = "assets/player.png";
 
 const goalImg = new Image();
 goalImg.src = "assets/goal.png";
-
-const ghostImg = new Image();
-ghostImg.src = "assets/ghost.png";
 
 // Timer Logic
 function startTimer() {
@@ -40,41 +36,45 @@ function startTimer() {
     }, 1000);
 }
 
-// Generate Maze
+// Generate Maze with only white (0) and black (1) cells
 function generateMaze() {
     let newMaze = Array.from({ length: gridSize }, () =>
-        Array.from({ length: gridSize }, () => {
-            const rand = Math.random();
-            return rand > 0.7 ? 1 : rand > 0.5 ? 2 : 0; // 1 = wall, 2 = grey (slow), 0 = open path
-        })
+        Array.from({ length: gridSize }, () => (Math.random() > 0.3 ? 0 : 1))
     );
+    
+    // Ensure player start position is walkable
     newMaze[player.y][player.x] = 0;
-    placeGoal(newMaze);
+    
+    // Keep goal in a valid position
+    newMaze[goal.y][goal.x] = 0;
+    
     return newMaze;
 }
 
-function placeGoal(newMaze) {
+function placeGoal() {
     do {
         goal.x = Math.floor(Math.random() * gridSize);
         goal.y = Math.floor(Math.random() * gridSize);
-    } while (newMaze[goal.y][goal.x] === 1);
-    newMaze[goal.y][goal.x] = 3;
+    } while (maze[goal.y][goal.x] === 1); // Ensure goal is on a white cell
 }
 
-// Draw Game
+// Draw Maze
 function drawMaze() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
     for (let y = 0; y < gridSize; y++) {
         for (let x = 0; x < gridSize; x++) {
             if (maze[y][x] === 1) {
                 ctx.fillStyle = "black";
                 ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-            } else if (maze[y][x] === 2) {
-                ctx.fillStyle = "grey";
+            } else {
+                ctx.fillStyle = "white";
                 ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
             }
         }
     }
+    
+    // Draw goal and player
     ctx.drawImage(goalImg, goal.x * cellSize, goal.y * cellSize, cellSize, cellSize);
     ctx.drawImage(playerImg, player.x * cellSize, player.y * cellSize, cellSize, cellSize);
 }
@@ -82,15 +82,19 @@ function drawMaze() {
 // Move Player
 function movePlayer(dx, dy) {
     if (!gameRunning) return;
+    
     let newX = player.x + dx;
     let newY = player.y + dy;
-    if (maze[newY] && maze[newY][newX] !== 1) {
+
+    if (maze[newY] && maze[newY][newX] === 0) {
         player.x = newX;
         player.y = newY;
     }
+
     if (player.x === goal.x && player.y === goal.y) {
         levelUp();
     }
+    
     drawMaze();
 }
 
@@ -101,17 +105,25 @@ function levelUp() {
     resetGame();
 }
 
-// Shift Maze
+// Shift Maze (refresh maze while keeping goal and player safe)
 function shiftMaze() {
     maze = generateMaze();
+    
+    // Ensure player is on a white cell
+    if (maze[player.y][player.x] === 1) {
+        player.x = 0;
+        player.y = 0;
+    }
+    
     drawMaze();
-    timeLeft = shiftInterval / 1000;
+    timeLeft = 5;
 }
 
 // Reset Game
 function resetGame() {
     player = { x: 0, y: 0 };
     maze = generateMaze();
+    placeGoal();
     drawMaze();
 }
 
