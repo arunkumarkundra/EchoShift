@@ -12,7 +12,7 @@ let timeLeft = 5;
 let player = { x: 0, y: 0 };
 let goal = { x: 0, y: 0 };
 let maze = [];
-let gameRunning = true;
+let gameRunning = false;
 
 // Load images
 const playerImg = new Image();
@@ -23,6 +23,8 @@ goalImg.src = "assets/goal.png";
 
 // Timer Logic
 function startTimer() {
+    timeLeft = 5;
+    document.getElementById("timer").innerText = timeLeft;
     let timer = setInterval(() => {
         if (!gameRunning) {
             clearInterval(timer);
@@ -36,45 +38,40 @@ function startTimer() {
     }, 1000);
 }
 
-// Generate Maze with only white (0) and black (1) cells
+// Generate Proper Maze (White = Walkable, Black = Wall)
 function generateMaze() {
     let newMaze = Array.from({ length: gridSize }, () =>
-        Array.from({ length: gridSize }, () => (Math.random() > 0.3 ? 0 : 1))
+        Array.from({ length: gridSize }, () => (Math.random() > 0.7 ? 1 : 0)) // 1 = Wall, 0 = Walkable
     );
-    
-    // Ensure player start position is walkable
-    newMaze[player.y][player.x] = 0;
-    
-    // Keep goal in a valid position
-    newMaze[goal.y][goal.x] = 0;
-    
+    ensureValidMaze(newMaze);
     return newMaze;
 }
 
-function placeGoal() {
+// Ensure Maze is Playable
+function ensureValidMaze(newMaze) {
+    newMaze[player.y][player.x] = 0; // Ensure player starts in a white cell
+    newMaze[goal.y][goal.x] = 0; // Ensure goal remains accessible
+}
+
+// Place Goal (Random but in a White Cell)
+function placeGoal(newMaze) {
     do {
         goal.x = Math.floor(Math.random() * gridSize);
         goal.y = Math.floor(Math.random() * gridSize);
-    } while (maze[goal.y][goal.x] === 1); // Ensure goal is on a white cell
+    } while (newMaze[goal.y][goal.x] === 1);
 }
 
-// Draw Maze
+// Draw Maze with Player & Goal
 function drawMaze() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
     for (let y = 0; y < gridSize; y++) {
         for (let x = 0; x < gridSize; x++) {
-            if (maze[y][x] === 1) {
-                ctx.fillStyle = "black";
-                ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-            } else {
-                ctx.fillStyle = "white";
-                ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-            }
+            ctx.fillStyle = maze[y][x] === 1 ? "black" : "white";
+            ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
         }
     }
-    
-    // Draw goal and player
+
     ctx.drawImage(goalImg, goal.x * cellSize, goal.y * cellSize, cellSize, cellSize);
     ctx.drawImage(playerImg, player.x * cellSize, player.y * cellSize, cellSize, cellSize);
 }
@@ -82,19 +79,15 @@ function drawMaze() {
 // Move Player
 function movePlayer(dx, dy) {
     if (!gameRunning) return;
-    
     let newX = player.x + dx;
     let newY = player.y + dy;
-
     if (maze[newY] && maze[newY][newX] === 0) {
         player.x = newX;
         player.y = newY;
     }
-
     if (player.x === goal.x && player.y === goal.y) {
         levelUp();
     }
-    
     drawMaze();
 }
 
@@ -105,25 +98,24 @@ function levelUp() {
     resetGame();
 }
 
-// Shift Maze (refresh maze while keeping goal and player safe)
+// Shift Maze Without Changing Goal
 function shiftMaze() {
-    maze = generateMaze();
-    
-    // Ensure player is on a white cell
-    if (maze[player.y][player.x] === 1) {
-        player.x = 0;
-        player.y = 0;
+    let newMaze = generateMaze();
+    while (newMaze[player.y][player.x] === 1) {
+        player.x = Math.floor(Math.random() * gridSize);
+        player.y = Math.floor(Math.random() * gridSize);
     }
-    
+    maze = newMaze;
     drawMaze();
     timeLeft = 5;
 }
 
 // Reset Game
 function resetGame() {
+    gameRunning = true;
     player = { x: 0, y: 0 };
     maze = generateMaze();
-    placeGoal();
+    placeGoal(maze);
     drawMaze();
 }
 
