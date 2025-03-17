@@ -20,9 +20,11 @@ let countdownTimer;
 let lastTimestamp = 0;
 let startTime = Date.now();
 let caughtByGhost = false;
-let imagesLoaded = false;
 
-// Audio Elements
+// Debugging flag to bypass images
+const USE_IMAGES = false; // Set to false to use shapes instead of images
+
+// Audio Elements (optional, comment out if not working)
 const moveSound = new Audio('assets/move.mp3');
 const wallSound = new Audio('assets/wall.mp3');
 const goalSound = new Audio('assets/goal.mp3');
@@ -30,30 +32,22 @@ const ghostSound = new Audio('assets/ghost.mp3');
 const mazeShiftSound = new Audio('assets/maze_shift.mp3');
 const gameOverSound = new Audio('assets/game_over.mp3');
 
-// Images
-const playerImg = new Image();
-const goalImg = new Image();
-const ghostImg = new Image();
-
-playerImg.src = 'assets/player.png';
-goalImg.src = 'assets/goal.png';
-ghostImg.src = 'assets/ghost.png';
-
-// Wait for images to load
-Promise.all([new Promise(resolve => playerImg.onload = resolve), new Promise(resolve => goalImg.onload = resolve), new Promise(resolve => ghostImg.onload = resolve)])
-    .catch(error => console.error('Image loading failed:', error))
-    .finally(() => {
-        imagesLoaded = true;
-        init();
-    });
+// Images (optional, only load if USE_IMAGES is true)
+let playerImg, goalImg, ghostImg;
+if (USE_IMAGES) {
+    playerImg = new Image();
+    goalImg = new Image();
+    ghostImg = new Image();
+    playerImg.src = 'assets/player.png';
+    goalImg.src = 'assets/goal.png';
+    ghostImg.src = 'assets/ghost.png';
+}
 
 // Initialize the game
 function init() {
-    if (!imagesLoaded) {
-        console.log('Waiting for images to load...');
-        return;
-    }
-
+    console.log('init() called');
+    
+    // Get canvas and context
     canvas = document.getElementById('gameCanvas');
     if (!canvas) {
         console.error('Canvas element not found!');
@@ -68,27 +62,47 @@ function init() {
     canvas.height = CANVAS_SIZE;
     console.log('Canvas initialized:', canvas.width, canvas.height);
 
+    // Initialize game state
     generateMaze();
     placePlayer();
     placeGoal();
     updateGhosts();
 
+    // Add event listeners
     document.addEventListener('keydown', handleKeyDown);
-    document.getElementById('up-btn').addEventListener('click', () => setPlayerDirection(0, -1));
-    document.getElementById('down-btn').addEventListener('click', () => setPlayerDirection(0, 1));
-    document.getElementById('left-btn').addEventListener('click', () => setPlayerDirection(-1, 0));
-    document.getElementById('right-btn').addEventListener('click', () => setPlayerDirection(1, 0));
+    const upBtn = document.getElementById('up-btn');
+    const downBtn = document.getElementById('down-btn');
+    const leftBtn = document.getElementById('left-btn');
+    const rightBtn = document.getElementById('right-btn');
+    const playAgainBtn = document.getElementById('playAgainBtn');
+    const shareBtn = document.getElementById('shareBtn');
 
-    document.getElementById('playAgainBtn').addEventListener('click', resetGame);
-    document.getElementById('shareBtn').addEventListener('click', shareGame);
+    if (upBtn) upBtn.addEventListener('click', () => setPlayerDirection(0, -1));
+    else console.error('up-btn not found');
+    if (downBtn) downBtn.addEventListener('click', () => setPlayerDirection(0, 1));
+    else console.error('down-btn not found');
+    if (leftBtn) leftBtn.addEventListener('click', () => setPlayerDirection(-1, 0));
+    else console.error('left-btn not found');
+    if (rightBtn) rightBtn.addEventListener('click', () => setPlayerDirection(1, 0));
+    else console.error('right-btn not found');
+    if (playAgainBtn) playAgainBtn.addEventListener('click', resetGame);
+    else console.error('playAgainBtn not found');
+    if (shareBtn) shareBtn.addEventListener('click', shareGame);
+    else console.error('shareBtn not found');
 
+    // Force initial draw
+    draw();
+    console.log('Initial draw called');
+
+    // Start game loop and countdown
     startGameLoop();
     startCountdown();
-    updateStats(); // Initial stats update
+    updateStats();
 }
 
 // Generate a maze with structured corridors
 function generateMaze() {
+    console.log('Generating maze');
     maze = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(1));
     const visited = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
 
@@ -115,9 +129,11 @@ function generateMaze() {
             if (maze[y][x] === 1 && Math.random() < wallDensity) maze[y][x] = 1;
         }
     }
+    console.log('Maze generated:', maze);
 }
 
 function placePlayer() {
+    console.log('Placing player');
     let placed = false;
     while (!placed) {
         const x = Math.floor(Math.random() * GRID_SIZE);
@@ -128,9 +144,11 @@ function placePlayer() {
             placed = true;
         }
     }
+    console.log('Player placed at:', player.x, player.y);
 }
 
 function placeGoal() {
+    console.log('Placing goal');
     let placed = false;
     while (!placed) {
         const x = Math.floor(Math.random() * GRID_SIZE);
@@ -141,9 +159,11 @@ function placeGoal() {
             placed = true;
         }
     }
+    console.log('Goal placed at:', goal.x, goal.y);
 }
 
 function updateGhosts() {
+    console.log('Updating ghosts');
     const ghostCount = Math.min(MAX_GHOSTS, Math.floor((level - 3) / 4));
     while (ghosts.length < ghostCount) {
         addGhost();
@@ -151,6 +171,7 @@ function updateGhosts() {
 }
 
 function addGhost() {
+    console.log('Adding ghost');
     let placed = false;
     while (!placed) {
         const x = Math.floor(Math.random() * GRID_SIZE);
@@ -158,9 +179,10 @@ function addGhost() {
         if (maze[y][x] === 0 && (x !== player.x || y !== player.y) && (x !== goal.x || y !== goal.y)) {
             ghosts.push({ x, y, direction: null });
             placed = true;
-            ghostSound.play().catch(e => console.log("Audio play failed:", e));
+            try { ghostSound.play(); } catch(e) { console.log("Ghost sound play failed:", e); }
         }
     }
+    console.log('Ghosts:', ghosts);
 }
 
 function moveGhosts() {
@@ -231,9 +253,9 @@ function movePlayer() {
         player.x = newX;
         player.y = newY;
         player.steps++;
-        moveSound.play().catch(e => console.log("Audio play failed:", e));
+        try { moveSound.play(); } catch(e) { console.log("Move sound play failed:", e); }
         if (player.x === goal.x && player.y === goal.y) {
-            goalSound.play().catch(e => console.log("Audio play failed:", e));
+            try { goalSound.play(); } catch(e) { console.log("Goal sound play failed:", e); }
             levelUp();
         }
         for (const ghost of ghosts) {
@@ -244,7 +266,7 @@ function movePlayer() {
             }
         }
     } else {
-        wallSound.play().catch(e => console.log("Audio play failed:", e));
+        try { wallSound.play(); } catch(e) { console.log("Wall sound play failed:", e); }
     }
     updateStats();
 }
@@ -268,6 +290,7 @@ function levelUp() {
 }
 
 function startGameLoop() {
+    console.log('Starting game loop');
     function gameLoop(timestamp) {
         if (gameOver) return;
         if (timestamp - lastTimestamp > 200) {
@@ -275,7 +298,7 @@ function startGameLoop() {
             movePlayer();
             draw();
             lastTimestamp = timestamp;
-            updateStats(); // Update stats in real-time
+            updateStats();
         }
         requestAnimationFrame(gameLoop);
     }
@@ -283,12 +306,13 @@ function startGameLoop() {
 }
 
 function startCountdown() {
+    console.log('Starting countdown');
     document.getElementById('timer').textContent = timer;
     countdownTimer = setInterval(() => {
         timer--;
         document.getElementById('timer').textContent = timer;
         if (timer <= 0) {
-            mazeShiftSound.play().catch(e => console.log("Audio play failed:", e));
+            try { mazeShiftSound.play(); } catch(e) { console.log("Maze shift sound play failed:", e); }
             shiftMaze();
             timer = shiftInterval;
             document.getElementById('timer').textContent = timer;
@@ -297,6 +321,7 @@ function startCountdown() {
 }
 
 function shiftMaze() {
+    console.log('Shifting maze');
     const oldGhosts = ghosts.map(g => ({ x: g.x, y: g.y, direction: g.direction }));
     generateMaze();
     maze[player.y][player.x] = 0;
@@ -309,7 +334,10 @@ function draw() {
         console.error('Canvas context not available!');
         return;
     }
+    console.log('Drawing frame');
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+    // Draw maze
     for (let y = 0; y < GRID_SIZE; y++) {
         for (let x = 0; x < GRID_SIZE; x++) {
             if (maze[y][x] === 1) {
@@ -318,18 +346,40 @@ function draw() {
             }
         }
     }
-    ctx.drawImage(goalImg, goal.x * CELL_SIZE, goal.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-    for (const ghost of ghosts) {
-        ctx.drawImage(ghostImg, ghost.x * CELL_SIZE, ghost.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+
+    // Draw goal
+    if (USE_IMAGES && goalImg.complete) {
+        ctx.drawImage(goalImg, goal.x * CELL_SIZE, goal.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+    } else {
+        ctx.fillStyle = 'yellow';
+        ctx.fillRect(goal.x * CELL_SIZE, goal.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
     }
+
+    // Draw ghosts
+    for (const ghost of ghosts) {
+        if (USE_IMAGES && ghostImg.complete) {
+            ctx.drawImage(ghostImg, ghost.x * CELL_SIZE, ghost.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        } else {
+            ctx.fillStyle = 'red';
+            ctx.fillRect(ghost.x * CELL_SIZE, ghost.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        }
+    }
+
+    // Draw player
     if (!caughtByGhost) {
-        ctx.drawImage(playerImg, player.x * CELL_SIZE, player.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        if (USE_IMAGES && playerImg.complete) {
+            ctx.drawImage(playerImg, player.x * CELL_SIZE, player.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        } else {
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(player.x * CELL_SIZE, player.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        }
     }
 }
 
 function endGame() {
+    console.log('Game over');
     gameOver = true;
-    gameOverSound.play().catch(e => console.log("Audio play failed:", e));
+    try { gameOverSound.play(); } catch(e) { console.log("Game over sound play failed:", e); }
     clearInterval(countdownTimer);
     draw();
     setTimeout(() => {
@@ -342,6 +392,7 @@ function endGame() {
 }
 
 function resetGame() {
+    console.log('Resetting game');
     level = 1;
     shiftInterval = INITIAL_SHIFT_INTERVAL;
     timer = shiftInterval;
@@ -353,8 +404,8 @@ function resetGame() {
 
     document.getElementById('level').textContent = level;
     document.getElementById('timer').textContent = timer;
-    document.getElementById('steps')?.textContent = '0';
-    document.getElementById('time')?.textContent = '0';
+    document.getElementById('steps').textContent = '0';
+    document.getElementById('time').textContent = '0';
     document.getElementById('gameOverScreen').style.display = 'none';
     generateMaze();
     placePlayer();
@@ -364,27 +415,46 @@ function resetGame() {
 }
 
 function shareGame() {
+    console.log('Sharing game');
     const playerName = document.getElementById('playerName').value || 'Anonymous';
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
     const shareText = `${playerName} reached Level ${level} with ${player.steps} steps in ${elapsed}s in MazeShift!`;
-    // Sharing logic remains the same
+    if (navigator.share) {
+        navigator.share({
+            title: 'MazeShift Score',
+            text: shareText,
+            url: window.location.href
+        }).catch(error => {
+            console.log('Error sharing:', error);
+        });
+    } else {
+        navigator.clipboard.writeText(shareText + ' ' + window.location.href)
+            .then(() => alert('Share text copied to clipboard!'))
+            .catch(err => {
+                console.log('Failed to copy:', err);
+                alert('Share feature not available. Tell your friends about your score!');
+            });
+    }
 }
 
 function updateStats() {
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
-    document.getElementById('steps')?.textContent = player.steps;
-    document.getElementById('time')?.textContent = elapsed;
+    const stepsEl = document.getElementById('steps');
+    const timeEl = document.getElementById('time');
+    if (stepsEl) stepsEl.textContent = player.steps;
+    if (timeEl) timeEl.textContent = elapsed;
 }
 
 window.addEventListener('resize', () => {
+    console.log('Window resized');
     const container = document.querySelector('.game-area');
     const width = Math.min(container.clientWidth, CANVAS_SIZE);
     canvas.style.width = width + 'px';
     canvas.style.height = width + 'px';
-    canvas.style.border = '3px solid #333'; // Ensure border scales
 });
 
 function setupSoundControls() {
+    console.log('Setting up sound controls');
     const sounds = [moveSound, wallSound, goalSound, ghostSound, mazeShiftSound, gameOverSound];
     sounds.forEach(sound => {
         sound.volume = 0.5;
@@ -397,11 +467,17 @@ function isMobile() {
 }
 
 function setupMobileControls() {
-    if (isMobile()) document.querySelector('.mobile-controls').style.display = 'block';
+    console.log('Setting up mobile controls');
+    if (isMobile()) {
+        const mobileControls = document.querySelector('.mobile-controls');
+        if (mobileControls) mobileControls.style.display = 'block';
+        else console.error('mobile-controls element not found');
+    }
 }
 
 window.addEventListener('load', () => {
+    console.log('Window loaded');
     setupSoundControls();
     setupMobileControls();
-    // init() will be called when images are loaded
+    init();
 });
