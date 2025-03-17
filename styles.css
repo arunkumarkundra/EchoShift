@@ -1,81 +1,164 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
-    text-align: center;
     font-family: Arial, sans-serif;
-    background: black;
-    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f0f0;
 }
 
-canvas {
-    background: rgba(255, 255, 255, 0.2);
-    border: 2px solid white;
-    margin-top: 10px;
-}
-
-/* Make mobile controls more visible */
-#mobileControls {
+.game-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 10px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    width: 100%;
 }
 
-#mobileControls button {
-    background: #444;
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 15px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.game-area {
+    position: relative;
+}
+
+#gameCanvas {
+    border: 2px solid #333;
+    background-color: #fff;
+}
+
+.instructions {
+    margin-top: 10px;
+    font-size: 14px;
+    text-align: center;
+    color: #555;
+}
+
+.mobile-controls {
+    display: none;
+    margin-top: 20px;
+    width: 100%;
+    max-width: 200px;
+}
+
+.horizontal-controls {
+    display: flex;
+    justify-content: space-between;
+}
+
+.mobile-controls button {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+    background-color: #333;
     color: white;
     border: none;
-    padding: 15px;
-    font-size: 20px;
-    margin: 5px;
+    border-radius: 8px;
     cursor: pointer;
-    border-radius: 5px;
+    margin: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-#mobileControls button:hover {
-    background: #666;
+.mobile-controls button:active {
+    background-color: #555;
 }
 
-/* Hide mobile controls on desktop */
-@media (min-width: 600px) {
-    #mobileControls {
-        display: none;
-    }
+#up-btn, #down-btn {
+    margin: 0 auto;
 }
 
-/* Timer & Level Display */
-p {
-    font-size: 18px;
-    margin: 5px 0;
-}
-
-/* Game Over Screen */
-.hidden {
+.game-over-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
     display: none;
 }
 
-#gameOverScreen {
-    background: rgba(0, 0, 0, 0.9);
-    color: white;
-    position: fixed;
-    top: 30%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 20px;
-    border: 2px solid white;
+.game-over-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
     text-align: center;
-    box-shadow: 0px 0px 10px white;
+    max-width: 400px;
+    width: 90%;
 }
 
-#gameOverScreen button {
-    background: #ff4444;
-    border: none;
-    color: white;
-    padding: 10px 15px;
+.game-over-content h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.game-over-content p {
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+#playerName {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
     font-size: 16px;
-    margin-top: 10px;
-    cursor: pointer;
+    border: 1px solid #ccc;
     border-radius: 5px;
 }
 
-#gameOverScreen button:hover {
-    background: #cc0000;
+.game-over-buttons {
+    display: flex;
+    justify-content: space-around;
+}
+
+.game-over-buttons button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #333;
+    color: white;
+}
+
+.game-over-buttons button:hover {
+    background-color: #555;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .mobile-controls {
+        display: block;
+    }
+    
+    .game-container {
+        padding: 10px;
+        max-width: 100%;
+    }
+    
+    #gameCanvas {
+        width: 100%;
+        height: auto;
+    }
 }
