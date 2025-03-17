@@ -301,6 +301,7 @@ function movePlayer() {
             try { moveSound.play(); } catch(e) { console.log("Move sound play failed:", e); }
             if (player.x === goal.x && player.y === goal.y) {
                 try { goalSound.play(); } catch(e) { console.log("Goal sound play failed:", e); }
+                coinsCollected++; // Increment coins collected
                 levelUp();
             }
             for (const ghost of ghosts) {
@@ -320,7 +321,7 @@ function movePlayer() {
 }
 
 function levelUp() {
-    level++;
+    level++; // Increment internal level for gameplay mechanics
     const change = (level - 1) % 4;
     if (change === 0) shiftInterval = Math.max(MIN_SHIFT_INTERVAL, shiftInterval - 1);
     else if (change === 1) {}
@@ -328,12 +329,31 @@ function levelUp() {
     else if (change === 3 && level >= 20) {}
 
     timer = shiftInterval;
-    document.getElementById('level').textContent = level;
+    document.getElementById('coins').textContent = coinsCollected; // Update coins display
     document.getElementById('timer').textContent = timer;
+
+    // Regenerate maze and ensure player is in a valid position
     generateMaze();
-    maze[player.y][player.x] = 0;
+    // Reposition player to a valid starting position
+    let placed = false;
+    while (!placed) {
+        const x = Math.floor(Math.random() * GRID_SIZE);
+        const y = Math.floor(Math.random() * GRID_SIZE);
+        if (maze[y][x] === 0 && (x !== goal.x || y !== goal.y)) {
+            player.x = x;
+            player.y = y;
+            maze[player.y][player.x] = 0; // Ensure player's position is a path
+            placed = true;
+        }
+    }
     placeGoal();
     updateGhosts();
+
+    // Clear player direction to allow new input
+    player.direction = null;
+    player.nextDirection = null;
+    console.log('Player repositioned to:', player.x, player.y, 'Direction cleared');
+
     updateStats();
 }
 
