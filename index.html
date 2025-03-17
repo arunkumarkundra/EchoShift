@@ -3,165 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Echo Shift</title>
-    <style>
-        body { 
-            text-align: center; 
-            font-family: Arial, sans-serif; 
-            background: black; 
-            color: white;
-        }
-        canvas { 
-            background: rgba(255, 255, 255, 0.1); 
-            border: 2px solid white; 
-            margin-top: 20px;
-        }
-    </style>
+    <title>Maze Shift</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Echo Shift</h1>
-    <p>Use arrow keys to navigate before the maze shifts!</p>
+    <h1>Maze Shift</h1>
+    <p>Use arrow keys or touch controls to navigate.</p>
+    <p>Level: <span id="level">1</span> | Time Left: <span id="timer">5</span>s</p>
     <canvas id="gameCanvas"></canvas>
 
-    <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
+    <!-- Mobile Controls -->
+    <div id="mobileControls">
+        <button id="up">▲</button>
+        <div>
+            <button id="left">◄</button>
+            <button id="down">▼</button>
+            <button id="right">►</button>
+        </div>
+    </div>
 
-        canvas.width = 400;
-        canvas.height = 400;
+    <div id="gameOverScreen" class="hidden">
+        <h2>Game Over</h2>
+        <p>Final Level: <span id="finalLevel"></span></p>
+        <p>Final Score: <span id="finalScore"></span></p>
+        <button onclick="restartGame()">Play Again</button>
+    </div>
 
-        const gridSize = 10; // Maze grid size
-        const cellSize = canvas.width / gridSize;
-
-        let player = { x: 0, y: 0 };
-        let goal = { x: gridSize - 1, y: gridSize - 1 };
-        let maze = [];
-        let previousMaze = [];
-        let shiftInterval = 5000;
-        let timeLeft = shiftInterval / 1000;
-        let gameInterval;
-
-        function generateMaze() {
-            let newMaze = Array.from({ length: gridSize }, () =>
-                Array.from({ length: gridSize }, () => Math.random() > 0.3 ? 0 : 1)
-            );
-            newMaze[player.y][player.x] = 0;
-            newMaze[goal.y][goal.x] = 0;
-            return newMaze;
-        }
-
-        function drawMaze() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw previous maze in a faint color
-            ctx.fillStyle = "rgba(200, 200, 200, 0.2)";
-            for (let y = 0; y < gridSize; y++) {
-                for (let x = 0; x < gridSize; x++) {
-                    if (previousMaze[y][x] === 1) {
-                        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-                    }
-                }
-            }
-
-            // Draw current maze
-            ctx.fillStyle = "white";
-            for (let y = 0; y < gridSize; y++) {
-                for (let x = 0; x < gridSize; x++) {
-                    if (maze[y][x] === 1) {
-                        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-                    }
-                }
-            }
-
-            // Draw player
-            ctx.fillStyle = "cyan";
-            ctx.beginPath();
-            ctx.arc(
-                player.x * cellSize + cellSize / 2,
-                player.y * cellSize + cellSize / 2,
-                cellSize / 3,
-                0,
-                Math.PI * 2
-            );
-            ctx.fill();
-
-            // Draw goal
-            ctx.fillStyle = "gold";
-            ctx.fillRect(goal.x * cellSize, goal.y * cellSize, cellSize, cellSize);
-
-            // Draw timer
-            ctx.fillStyle = "white";
-            ctx.font = "16px Arial";
-            ctx.fillText(`Time Left: ${timeLeft}s`, 10, 20);
-        }
-
-        function movePlayer(dx, dy) {
-            let newX = player.x + dx;
-            let newY = player.y + dy;
-
-            if (
-                newX >= 0 &&
-                newX < gridSize &&
-                newY >= 0 &&
-                newY < gridSize &&
-                maze[newY][newX] === 0
-            ) {
-                player.x = newX;
-                player.y = newY;
-            }
-
-            if (player.x === goal.x && player.y === goal.y) {
-                alert("You Win! Next Level...");
-                shiftInterval -= 500; // Increase difficulty
-                resetGame();
-            }
-
-            drawMaze();
-        }
-
-        function handleKeydown(event) {
-            switch (event.key) {
-                case "ArrowUp":
-                    movePlayer(0, -1);
-                    break;
-                case "ArrowDown":
-                    movePlayer(0, 1);
-                    break;
-                case "ArrowLeft":
-                    movePlayer(-1, 0);
-                    break;
-                case "ArrowRight":
-                    movePlayer(1, 0);
-                    break;
-            }
-        }
-
-        function shiftMaze() {
-            previousMaze = JSON.parse(JSON.stringify(maze)); // Store previous maze
-            maze = generateMaze();
-            if (maze[player.y][player.x] === 1) {
-                player = { x: 0, y: 0 }; // Reset player if stuck
-            }
-            timeLeft = shiftInterval / 1000;
-            drawMaze();
-        }
-
-        function resetGame() {
-            player = { x: 0, y: 0 };
-            goal = { x: gridSize - 1, y: gridSize - 1 };
-            maze = generateMaze();
-            previousMaze = JSON.parse(JSON.stringify(maze));
-            clearInterval(gameInterval);
-            gameInterval = setInterval(() => {
-                timeLeft--;
-                if (timeLeft <= 0) shiftMaze();
-                drawMaze();
-            }, 1000);
-            drawMaze();
-        }
-
-        window.addEventListener("keydown", handleKeydown);
-        resetGame();
-    </script>
+    <script src="game.js"></script>
 </body>
 </html>
