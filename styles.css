@@ -1,30 +1,44 @@
-/* Same as original with adjustments for new canvas size and additional stats */
+/* Existing styles remain, with adjustments for responsiveness */
 .game-container {
-    max-width: 600px; /* Adjusted for 480px canvas */
+    max-width: 600px;
+    width: 100%;
 }
 
 .game-header {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
+    padding: 10px;
 }
 
 .stats {
     margin: 5px 0;
+    font-size: 16px;
 }
 
-.game-over-content p {
-    margin-bottom: 10px;
+.game-area {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
 }
 
-#finalSteps, #finalTime {
-    display: block;
-    margin: 5px 0;
+#gameCanvas {
+    border: 3px solid #333;
+    background-color: #fff;
+    border-radius: 5px;
+    width: 100%;
+    height: auto;
+    max-width: 480px;
+    max-height: 480px;
 }
 
 @media (max-width: 768px) {
     .game-header {
         font-size: 14px;
+    }
+    #gameCanvas {
+        width: 100%;
+        height: auto;
     }
     .mobile-controls button {
         width: 60px;
