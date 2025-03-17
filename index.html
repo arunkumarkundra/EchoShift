@@ -10,7 +10,60 @@
     <div class="game-container">
         <h1 class="game-title">MazeShift</h1>
         
+        <div class="game-header"><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MazeShift</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="game-title">MazeShift</h1>
+        
         <div class="game-header">
+            <div class="level-counter">Level: <span id="level">1</span></div>
+            <div class="shift-timer">Maze Shift in: <span id="timer">10</span>s</div>
+            <div class="stats">Steps: <span id="steps">0</span> | Time: <span id="time">0</span>s</div>
+        </div>
+        
+        <div class="game-area">
+            <canvas id="gameCanvas" width="480" height="480"></canvas>
+        </div>
+        
+        <div class="instructions">
+            <p>Navigate the shifting maze to reach the goal!</p>
+            <p>Avoid ghosts in higher levels.</p>
+        </div>
+        
+        <div class="mobile-controls">
+            <button id="up-btn" aria-label="Move Up">▲</button>
+            <div class="horizontal-controls">
+                <button id="left-btn" aria-label="Move Left">◄</button>
+                <button id="down-btn" aria-label="Move Down">▼</button>
+                <button id="right-btn" aria-label="Move Right">►</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="gameOverScreen" class="game-over-screen">
+        <div class="game-over-content">
+            <h2>Game Over!</h2>
+            <p>You reached Level <span id="finalLevel">1</span></p>
+            <p>Steps: <span id="finalSteps">0</span></p>
+            <p>Time: <span id="finalTime">0</span>s</p>
+            <input type="text" id="playerName" placeholder="Enter your name">
+            <div class="game-over-buttons">
+                <button id="shareBtn">Share</button>
+                <button id="playAgainBtn">Play Again</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>
             <div class="level-counter">Level: <span id="level">1</span></div>
             <div class="shift-timer">Maze Shift in: <span id="timer">10</span>s</div>
             <div class="stats">Steps: <span id="steps">0</span> | Time: <span id="time">0</span>s</div>
