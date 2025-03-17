@@ -13,15 +13,16 @@
         <div class="game-header">
             <div class="level-counter">Level: <span id="level">1</span></div>
             <div class="shift-timer">Maze Shift in: <span id="timer">10</span>s</div>
+            <div class="stats">Steps: <span id="steps">0</span> | Time: <span id="time">0</span>s</div>
         </div>
         
         <div class="game-area">
-            <canvas id="gameCanvas" width="500" height="500"></canvas>
+            <canvas id="gameCanvas" width="480" height="480"></canvas>
         </div>
         
         <div class="instructions">
-            <p>Navigate the shifting maze to collect as many coins as possible!</p>
-            <p>Avoid the ghosts that appear in higher levels.</p>
+            <p>Navigate the shifting maze to reach the goal!</p>
+            <p>Avoid ghosts in higher levels.</p>
         </div>
         
         <div class="mobile-controls">
@@ -38,6 +39,8 @@
         <div class="game-over-content">
             <h2>Game Over!</h2>
             <p>You reached Level <span id="finalLevel">1</span></p>
+            <p>Steps: <span id="finalSteps">0</span></p>
+            <p>Time: <span id="finalTime">0</span>s</p>
             <input type="text" id="playerName" placeholder="Enter your name">
             <div class="game-over-buttons">
                 <button id="shareBtn">Share</button>
