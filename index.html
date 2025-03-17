@@ -11,7 +11,7 @@
         <h1 class="game-title">MazeShift</h1>
         
         <div class="game-header">
-            <div class="level-counter">Level: <span id="level">1</span></div>
+            <div class="level-counter">Coins Collected: <span id="coins">0</span></div>
             <div class="shift-timer">Maze Shift in: <span id="timer">10</span>s</div>
             <div class="stats">Steps: <span id="steps">0</span> | Time: <span id="time">0</span>s</div>
         </div>
@@ -37,8 +37,9 @@
     
     <div id="gameOverScreen" class="game-over-screen">
         <div class="game-over-content">
+            <h1 class="game-title">MazeShift</h1>
             <h2>Game Over!</h2>
-            <p>You reached Level <span id="finalLevel">1</span></p>
+            <p>You collected <span id="finalCoins">0</span> Coins</p>
             <p>Steps: <span id="finalSteps">0</span></p>
             <p>Time: <span id="finalTime">0</span>s</p>
             <input type="text" id="playerName" placeholder="Enter your name">
@@ -50,5 +51,6 @@
     </div>
     
     <script src="game.js"></script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'921cb384bf38afa8',t:'MTc0MjIxNjcyMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
