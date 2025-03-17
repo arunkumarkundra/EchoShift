@@ -381,7 +381,10 @@ function levelUp() {
     if (level >= 15) levelModifiers.push(() => enableGhostPathfinding());
 
     const randomModifier = levelModifiers[Math.floor(Math.random() * levelModifiers.length)];
-    if (randomModifier) randomModifier();
+    if (levelModifiers.length > 0) {
+    const randomModifier = levelModifiers[Math.floor(Math.random() * levelModifiers.length)];
+    randomModifier();
+}
 
     timer = shiftInterval;
     document.getElementById('timer').textContent = timer;
@@ -482,7 +485,10 @@ function shiftMaze() {
     goal.x = goalX;
     goal.y = goalY;
 
-    ghosts = ghostPositions.map(pos => ({ x: pos.x, y: pos.y }));
+    ghosts = [];
+    ghostPositions.forEach(pos => {
+        ghosts.push({ x: pos.x, y: pos.y });
+    });
     
     // Remember player position
     const playerX = player.x;
