@@ -12,7 +12,6 @@ let timeLeft = shiftInterval / 1000;
 let player = { x: 0, y: 0 };
 let goal = { x: 0, y: 0 };
 let maze = [];
-let previousMaze = [];
 let ghosts = [];
 let gameRunning = true;
 
@@ -26,18 +25,27 @@ goalImg.src = "assets/goal.png";
 const ghostImg = new Image();
 ghostImg.src = "assets/ghost.png";
 
-// Load sounds
-const moveSound = new Audio("assets/move.mp3");
-const wallSound = new Audio("assets/wall.mp3");
-const goalSound = new Audio("assets/goal.mp3");
-const ghostSound = new Audio("assets/ghost.mp3");
+// Timer Logic
+function startTimer() {
+    let timer = setInterval(() => {
+        if (!gameRunning) {
+            clearInterval(timer);
+            return;
+        }
+        timeLeft--;
+        document.getElementById("timer").innerText = timeLeft;
+        if (timeLeft <= 0) {
+            shiftMaze();
+        }
+    }, 1000);
+}
 
 // Generate Maze
 function generateMaze() {
     let newMaze = Array.from({ length: gridSize }, () =>
         Array.from({ length: gridSize }, () => {
-            const random = Math.random();
-            return random > 0.3 ? 0 : random > 0.2 ? 2 : 1; // 0 = open, 1 = wall, 2 = grey (slow)
+            const rand = Math.random();
+            return rand > 0.7 ? 1 : rand > 0.5 ? 2 : 0; // 1 = wall, 2 = grey (slow), 0 = open path
         })
     );
     newMaze[player.y][player.x] = 0;
@@ -69,7 +77,6 @@ function drawMaze() {
     }
     ctx.drawImage(goalImg, goal.x * cellSize, goal.y * cellSize, cellSize, cellSize);
     ctx.drawImage(playerImg, player.x * cellSize, player.y * cellSize, cellSize, cellSize);
-    ghosts.forEach(g => ctx.drawImage(ghostImg, g.x * cellSize, g.y * cellSize, cellSize, cellSize));
 }
 
 // Move Player
@@ -80,39 +87,25 @@ function movePlayer(dx, dy) {
     if (maze[newY] && maze[newY][newX] !== 1) {
         player.x = newX;
         player.y = newY;
-        moveSound.play();
-        if (maze[newY][newX] === 2) ghostSound.play(); // Stepping on grey cell attracts ghosts
-    } else {
-        wallSound.play();
     }
     if (player.x === goal.x && player.y === goal.y) {
-        goalSound.play();
         levelUp();
     }
     drawMaze();
-}
-
-// Ghost Movement
-function moveGhosts() {
-    ghosts.forEach(g => {
-        let dir = Math.random() > 0.5 ? { x: 1, y: 0 } : { x: 0, y: 1 };
-        let newX = g.x + dir.x;
-        let newY = g.y + dir.y;
-        if (maze[newY] && maze[newY][newX] !== 1) {
-            g.x = newX;
-            g.y = newY;
-        }
-    });
 }
 
 // Level Up
 function levelUp() {
     level++;
     shiftInterval = Math.max(1000, shiftInterval - 500);
-    if (level % 2 === 0 && ghosts.length < 4) {
-        ghosts.push({ x: Math.floor(Math.random() * gridSize), y: Math.floor(Math.random() * gridSize) });
-    }
     resetGame();
+}
+
+// Shift Maze
+function shiftMaze() {
+    maze = generateMaze();
+    drawMaze();
+    timeLeft = shiftInterval / 1000;
 }
 
 // Reset Game
@@ -122,5 +115,20 @@ function resetGame() {
     drawMaze();
 }
 
-setInterval(moveGhosts, 1000);
+// Touchscreen Controls
+document.getElementById("up").addEventListener("click", () => movePlayer(0, -1));
+document.getElementById("down").addEventListener("click", () => movePlayer(0, 1));
+document.getElementById("left").addEventListener("click", () => movePlayer(-1, 0));
+document.getElementById("right").addEventListener("click", () => movePlayer(1, 0));
+
+// Keyboard Controls
+document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowUp") movePlayer(0, -1);
+    if (e.key === "ArrowDown") movePlayer(0, 1);
+    if (e.key === "ArrowLeft") movePlayer(-1, 0);
+    if (e.key === "ArrowRight") movePlayer(1, 0);
+});
+
+// Start Game
 resetGame();
+startTimer();
