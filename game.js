@@ -1,7 +1,7 @@
 // Game Constants
-const CELL_SIZE = 24; // Increased for better visibility
-const GRID_SIZE = 20; // 20x20 grid for 480x480 canvas
-const CANVAS_SIZE = 480; // Adjusted to be divisible by CELL_SIZE
+const CELL_SIZE = 24;
+const GRID_SIZE = 20;
+const CANVAS_SIZE = 480;
 const INITIAL_SHIFT_INTERVAL = 10;
 const MIN_SHIFT_INTERVAL = 1;
 const MAX_GHOSTS = 4;
@@ -20,6 +20,7 @@ let countdownTimer;
 let lastTimestamp = 0;
 let startTime = Date.now();
 let caughtByGhost = false;
+let imagesLoaded = false;
 
 // Audio Elements
 const moveSound = new Audio('assets/move.mp3');
@@ -31,49 +32,73 @@ const gameOverSound = new Audio('assets/game_over.mp3');
 
 // Images
 const playerImg = new Image();
-playerImg.src = 'assets/player.png';
 const goalImg = new Image();
-goalImg.src = 'assets/goal.png';
 const ghostImg = new Image();
+
+playerImg.src = 'assets/player.png';
+goalImg.src = 'assets/goal.png';
 ghostImg.src = 'assets/ghost.png';
+
+// Wait for images to load
+Promise.all([new Promise(resolve => playerImg.onload = resolve), new Promise(resolve => goalImg.onload = resolve), new Promise(resolve => ghostImg.onload = resolve)])
+    .catch(error => console.error('Image loading failed:', error))
+    .finally(() => {
+        imagesLoaded = true;
+        init();
+    });
 
 // Initialize the game
 function init() {
+    if (!imagesLoaded) {
+        console.log('Waiting for images to load...');
+        return;
+    }
+
     canvas = document.getElementById('gameCanvas');
+    if (!canvas) {
+        console.error('Canvas element not found!');
+        return;
+    }
     ctx = canvas.getContext('2d');
+    if (!ctx) {
+        console.error('Failed to get canvas context!');
+        return;
+    }
     canvas.width = CANVAS_SIZE;
     canvas.height = CANVAS_SIZE;
-    
+    console.log('Canvas initialized:', canvas.width, canvas.height);
+
     generateMaze();
     placePlayer();
     placeGoal();
     updateGhosts();
-    
+
     document.addEventListener('keydown', handleKeyDown);
     document.getElementById('up-btn').addEventListener('click', () => setPlayerDirection(0, -1));
     document.getElementById('down-btn').addEventListener('click', () => setPlayerDirection(0, 1));
     document.getElementById('left-btn').addEventListener('click', () => setPlayerDirection(-1, 0));
     document.getElementById('right-btn').addEventListener('click', () => setPlayerDirection(1, 0));
-    
+
     document.getElementById('playAgainBtn').addEventListener('click', resetGame);
     document.getElementById('shareBtn').addEventListener('click', shareGame);
-    
+
     startGameLoop();
     startCountdown();
+    updateStats(); // Initial stats update
 }
 
-// Generate a maze with structured corridors using recursive backtracking
+// Generate a maze with structured corridors
 function generateMaze() {
     maze = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(1));
     const visited = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
-    
+
     function carve(x, y) {
         visited[y][x] = true;
         maze[y][x] = 0;
-        
+
         const directions = [[0, -2], [0, 2], [-2, 0], [2, 0]];
         directions.sort(() => Math.random() - 0.5);
-        
+
         for (const [dx, dy] of directions) {
             const nx = x + dx, ny = y + dy;
             if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE && !visited[ny][nx]) {
@@ -82,9 +107,9 @@ function generateMaze() {
             }
         }
     }
-    
+
     carve(0, 0);
-    const wallDensity = 0.3 + (level * 0.01) % 0.2; // Increase walls incrementally
+    const wallDensity = 0.3 + ((level - 1) * 0.01) % 0.2;
     for (let y = 0; y < GRID_SIZE; y++) {
         for (let x = 0; x < GRID_SIZE; x++) {
             if (maze[y][x] === 1 && Math.random() < wallDensity) maze[y][x] = 1;
@@ -201,7 +226,7 @@ function movePlayer() {
     if (gameOver || !player.direction) return;
     const newX = player.x + player.direction.x;
     const newY = player.y + player.direction.y;
-    
+
     if (isValidMove(newX, newY)) {
         player.x = newX;
         player.y = newY;
@@ -221,6 +246,7 @@ function movePlayer() {
     } else {
         wallSound.play().catch(e => console.log("Audio play failed:", e));
     }
+    updateStats();
 }
 
 function levelUp() {
@@ -230,7 +256,7 @@ function levelUp() {
     else if (change === 1) {} // Wall density increases in generateMaze
     else if (change === 2) updateGhosts();
     else if (change === 3 && level >= 15) {} // Ghost behavior changes in moveGhosts
-    
+
     timer = shiftInterval;
     document.getElementById('level').textContent = level;
     document.getElementById('timer').textContent = timer;
@@ -238,6 +264,7 @@ function levelUp() {
     maze[player.y][player.x] = 0;
     placeGoal();
     updateGhosts();
+    updateStats();
 }
 
 function startGameLoop() {
@@ -248,6 +275,7 @@ function startGameLoop() {
             movePlayer();
             draw();
             lastTimestamp = timestamp;
+            updateStats(); // Update stats in real-time
         }
         requestAnimationFrame(gameLoop);
     }
@@ -277,6 +305,10 @@ function shiftMaze() {
 }
 
 function draw() {
+    if (!ctx) {
+        console.error('Canvas context not available!');
+        return;
+    }
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     for (let y = 0; y < GRID_SIZE; y++) {
         for (let x = 0; x < GRID_SIZE; x++) {
@@ -318,9 +350,11 @@ function resetGame() {
     player.steps = 0;
     startTime = Date.now();
     caughtByGhost = false;
-    
+
     document.getElementById('level').textContent = level;
     document.getElementById('timer').textContent = timer;
+    document.getElementById('steps')?.textContent = '0';
+    document.getElementById('time')?.textContent = '0';
     document.getElementById('gameOverScreen').style.display = 'none';
     generateMaze();
     placePlayer();
@@ -336,11 +370,18 @@ function shareGame() {
     // Sharing logic remains the same
 }
 
+function updateStats() {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    document.getElementById('steps')?.textContent = player.steps;
+    document.getElementById('time')?.textContent = elapsed;
+}
+
 window.addEventListener('resize', () => {
     const container = document.querySelector('.game-area');
     const width = Math.min(container.clientWidth, CANVAS_SIZE);
     canvas.style.width = width + 'px';
     canvas.style.height = width + 'px';
+    canvas.style.border = '3px solid #333'; // Ensure border scales
 });
 
 function setupSoundControls() {
@@ -362,5 +403,5 @@ function setupMobileControls() {
 window.addEventListener('load', () => {
     setupSoundControls();
     setupMobileControls();
-    init();
+    // init() will be called when images are loaded
 });
