@@ -3,33 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maze Shift</title>
+    <title>MazeShift</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Maze Shift</h1>
-    <p>Use arrow keys or touch controls to navigate.</p>
-    <p>Level: <span id="level">1</span> | Time Left: <span id="timer">5</span>s</p>
-    <canvas id="gameCanvas"></canvas>
-
-    <!-- Mobile Controls -->
-    <div id="mobileControls">
-        <button id="up">▲</button>
-        <div>
-            <button id="left">◄</button>
-            <button id="down">▼</button>
-            <button id="right">►</button>
+    <div class="game-container">
+        <div class="game-header">
+            <div class="level-counter">Level: <span id="level">1</span></div>
+            <div class="shift-timer">Maze Shift: <span id="timer">10</span>s</div>
+        </div>
+        
+        <div class="game-area">
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            
+            <div class="instructions">
+                <p>Navigate through the maze to reach the goal before the maze shifts!</p>
+                <p>Avoid the ghosts that appear in higher levels.</p>
+            </div>
+        </div>
+        
+        <div class="mobile-controls">
+            <button id="up-btn" aria-label="Move Up">▲</button>
+            <div class="horizontal-controls">
+                <button id="left-btn" aria-label="Move Left">◄</button>
+                <button id="down-btn" aria-label="Move Down">▼</button>
+                <button id="right-btn" aria-label="Move Right">►</button>
+            </div>
         </div>
     </div>
-
-    <div id="gameOverScreen" class="hidden">
-        <h2>Game Over</h2>
-        <p>Final Level: <span id="finalLevel"></span></p>
-        <p>Final Score: <span id="finalScore"></span></p>
-        <button onclick="restartGame()">Play Again</button>
+    
+    <div id="gameOverScreen" class="game-over-screen">
+        <div class="game-over-content">
+            <h2>Game Over!</h2>
+            <p>You reached Level <span id="finalLevel">1</span></p>
+            <input type="text" id="playerName" placeholder="Enter your name">
+            <div class="game-over-buttons">
+                <button id="shareBtn">Share</button>
+                <button id="playAgainBtn">Play Again</button>
+            </div>
+        </div>
     </div>
-
+    
     <script src="game.js"></script>
 </body>
 </html>
-
