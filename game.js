@@ -8,7 +8,7 @@ const MAX_GHOSTS = 4;
 
 // Game Variables
 let canvas, ctx;
-let player = { x: 0, y: 0, direction: null, steps: 0 };
+let player = { x: 0, y: 0, direction: null, nextDirection: null, steps: 0 };
 let goal = { x: 0, y: 0 };
 let ghosts = [];
 let maze = [];
@@ -21,10 +21,51 @@ let lastTimestamp = 0;
 let startTime = Date.now();
 let caughtByGhost = false;
 
-// Debugging flag to bypass images
-const USE_IMAGES = false; // Set to false to use shapes instead of images
+// Debugging flag to use images
+const USE_IMAGES = true;
 
-// Audio Elements (optional, comment out if not working)
+// Images
+let playerImg, goalImg, ghostImg;
+let imagesLoaded = 0;
+const totalImages = 3;
+
+if (USE_IMAGES) {
+    playerImg = new Image();
+    goalImg = new Image();
+    ghostImg = new Image();
+
+    playerImg.src = 'assets/player.png';
+    goalImg.src = 'assets/goal.png';
+    ghostImg.src = 'assets/ghost.png';
+
+    playerImg.onload = () => {
+        imagesLoaded++;
+        console.log('Player image loaded');
+        checkImagesLoaded();
+    };
+    goalImg.onload = () => {
+        imagesLoaded++;
+        console.log('Goal image loaded');
+        checkImagesLoaded();
+    };
+    ghostImg.onload = () => {
+        imagesLoaded++;
+        console.log('Ghost image loaded');
+        checkImagesLoaded();
+    };
+    playerImg.onerror = () => console.error('Failed to load player.png');
+    goalImg.onerror = () => console.error('Failed to load goal.png');
+    ghostImg.onerror = () => console.error('Failed to load ghost.png');
+}
+
+function checkImagesLoaded() {
+    if (imagesLoaded === totalImages) {
+        console.log('All images loaded, initializing game');
+        init();
+    }
+}
+
+// Audio Elements
 const moveSound = new Audio('assets/move.mp3');
 const wallSound = new Audio('assets/wall.mp3');
 const goalSound = new Audio('assets/goal.mp3');
@@ -32,22 +73,15 @@ const ghostSound = new Audio('assets/ghost.mp3');
 const mazeShiftSound = new Audio('assets/maze_shift.mp3');
 const gameOverSound = new Audio('assets/game_over.mp3');
 
-// Images (optional, only load if USE_IMAGES is true)
-let playerImg, goalImg, ghostImg;
-if (USE_IMAGES) {
-    playerImg = new Image();
-    goalImg = new Image();
-    ghostImg = new Image();
-    playerImg.src = 'assets/player.png';
-    goalImg.src = 'assets/goal.png';
-    ghostImg.src = 'assets/ghost.png';
-}
-
 // Initialize the game
 function init() {
+    if (USE_IMAGES && imagesLoaded < totalImages) {
+        console.log('Waiting for images to load...');
+        return;
+    }
+
     console.log('init() called');
     
-    // Get canvas and context
     canvas = document.getElementById('gameCanvas');
     if (!canvas) {
         console.error('Canvas element not found!');
@@ -62,13 +96,11 @@ function init() {
     canvas.height = CANVAS_SIZE;
     console.log('Canvas initialized:', canvas.width, canvas.height);
 
-    // Initialize game state
     generateMaze();
     placePlayer();
     placeGoal();
     updateGhosts();
 
-    // Add event listeners
     document.addEventListener('keydown', handleKeyDown);
     const upBtn = document.getElementById('up-btn');
     const downBtn = document.getElementById('down-btn');
@@ -90,11 +122,9 @@ function init() {
     if (shareBtn) shareBtn.addEventListener('click', shareGame);
     else console.error('shareBtn not found');
 
-    // Force initial draw
     draw();
     console.log('Initial draw called');
 
-    // Start game loop and countdown
     startGameLoop();
     startCountdown();
     updateStats();
@@ -240,33 +270,51 @@ function handleKeyDown(e) {
 }
 
 function setPlayerDirection(dx, dy) {
-    player.direction = { x: dx, y: dy };
-    movePlayer();
+    player.nextDirection = { x: dx, y: dy };
+    console.log('Set next direction:', player.nextDirection);
 }
 
 function movePlayer() {
-    if (gameOver || !player.direction) return;
-    const newX = player.x + player.direction.x;
-    const newY = player.y + player.direction.y;
+    if (gameOver) return;
 
-    if (isValidMove(newX, newY)) {
-        player.x = newX;
-        player.y = newY;
-        player.steps++;
-        try { moveSound.play(); } catch(e) { console.log("Move sound play failed:", e); }
-        if (player.x === goal.x && player.y === goal.y) {
-            try { goalSound.play(); } catch(e) { console.log("Goal sound play failed:", e); }
-            levelUp();
+    if (player.nextDirection) {
+        const nextX = player.x + player.nextDirection.x;
+        const nextY = player.y + player.nextDirection.y;
+        if (isValidMove(nextX, nextY)) {
+            player.direction = player.nextDirection;
+            player.nextDirection = null;
+            console.log('Changed direction to:', player.direction);
+        } else {
+            player.nextDirection = null;
+            console.log('Illegal move ignored:', player.nextDirection);
         }
-        for (const ghost of ghosts) {
-            if (ghost.x === player.x && ghost.y === player.y) {
-                caughtByGhost = true;
-                endGame();
-                return;
+    }
+
+    if (player.direction) {
+        const newX = player.x + player.direction.x;
+        const newY = player.y + player.direction.y;
+
+        if (isValidMove(newX, newY)) {
+            player.x = newX;
+            player.y = newY;
+            player.steps++;
+            try { moveSound.play(); } catch(e) { console.log("Move sound play failed:", e); }
+            if (player.x === goal.x && player.y === goal.y) {
+                try { goalSound.play(); } catch(e) { console.log("Goal sound play failed:", e); }
+                levelUp();
             }
+            for (const ghost of ghosts) {
+                if (ghost.x === player.x && ghost.y === player.y) {
+                    caughtByGhost = true;
+                    endGame();
+                    return;
+                }
+            }
+        } else {
+            player.direction = { x: -player.direction.x, y: -player.direction.y };
+            console.log('Bounced back to:', player.direction);
+            try { wallSound.play(); } catch(e) { console.log("Wall sound play failed:", e); }
         }
-    } else {
-        try { wallSound.play(); } catch(e) { console.log("Wall sound play failed:", e); }
     }
     updateStats();
 }
@@ -275,9 +323,9 @@ function levelUp() {
     level++;
     const change = (level - 1) % 4;
     if (change === 0) shiftInterval = Math.max(MIN_SHIFT_INTERVAL, shiftInterval - 1);
-    else if (change === 1) {} // Wall density increases in generateMaze
+    else if (change === 1) {}
     else if (change === 2) updateGhosts();
-    else if (change === 3 && level >= 20) {} // Ghost behavior changes in moveGhosts
+    else if (change === 3 && level >= 20) {}
 
     timer = shiftInterval;
     document.getElementById('level').textContent = level;
@@ -337,7 +385,6 @@ function draw() {
     console.log('Drawing frame');
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
-    // Draw maze
     for (let y = 0; y < GRID_SIZE; y++) {
         for (let x = 0; x < GRID_SIZE; x++) {
             if (maze[y][x] === 1) {
@@ -347,7 +394,6 @@ function draw() {
         }
     }
 
-    // Draw goal
     if (USE_IMAGES && goalImg.complete) {
         ctx.drawImage(goalImg, goal.x * CELL_SIZE, goal.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
     } else {
@@ -355,7 +401,6 @@ function draw() {
         ctx.fillRect(goal.x * CELL_SIZE, goal.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
     }
 
-    // Draw ghosts
     for (const ghost of ghosts) {
         if (USE_IMAGES && ghostImg.complete) {
             ctx.drawImage(ghostImg, ghost.x * CELL_SIZE, ghost.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
@@ -365,7 +410,6 @@ function draw() {
         }
     }
 
-    // Draw player
     if (!caughtByGhost) {
         if (USE_IMAGES && playerImg.complete) {
             ctx.drawImage(playerImg, player.x * CELL_SIZE, player.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
@@ -418,17 +462,27 @@ function shareGame() {
     console.log('Sharing game');
     const playerName = document.getElementById('playerName').value || 'Anonymous';
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
-    const shareText = `${playerName} reached Level ${level} with ${player.steps} steps in ${elapsed}s in MazeShift!`;
-    if (navigator.share) {
-        navigator.share({
-            title: 'MazeShift Score',
-            text: shareText,
-            url: window.location.href
-        }).catch(error => {
-            console.log('Error sharing:', error);
-        });
-    } else {
-        navigator.clipboard.writeText(shareText + ' ' + window.location.href)
+    const shareText = `${playerName} reached Level ${level} with ${player.steps} steps in ${elapsed}s in MazeShift! Play now: ${window.location.href}`;
+
+    canvas.toBlob(blob => {
+        const file = new File([blob], 'maze-shift-screenshot.png', { type: 'image/png' });
+
+        if (navigator.share) {
+            navigator.share({
+                title: 'MazeShift Score',
+                text: shareText,
+                files: [file]
+            }).catch(error => {
+                console.log('Error sharing:', error);
+                fallbackShare(shareText);
+            });
+        } else {
+            fallbackShare(shareText);
+        }
+    }, 'image/png');
+
+    function fallbackShare(text) {
+        navigator.clipboard.writeText(text)
             .then(() => alert('Share text copied to clipboard!'))
             .catch(err => {
                 console.log('Failed to copy:', err);
@@ -479,5 +533,7 @@ window.addEventListener('load', () => {
     console.log('Window loaded');
     setupSoundControls();
     setupMobileControls();
-    init();
+    if (!USE_IMAGES) {
+        init();
+    }
 });
