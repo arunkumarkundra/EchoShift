@@ -3,7 +3,7 @@ const CELL_SIZE = 24;
 const GRID_SIZE = 20;
 const CANVAS_SIZE = 480;
 const INITIAL_SHIFT_INTERVAL = 10;
-const MIN_SHIFT_INTERVAL = 1;
+const MIN_SHIFT_INTERVAL = 3;
 const MAX_GHOSTS = 4;
 
 // Game Variables
