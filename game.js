@@ -1,5 +1,5 @@
 // Game Constants
-const CELL_SIZE = 20;
+const CELL_SIZE = CANVAS_SIZE / GRID_SIZE;
 const GRID_SIZE = 20; // 20x20 grid for 400x400 canvas
 const CANVAS_SIZE = 400;
 const INITIAL_SHIFT_INTERVAL = 10; // Initial maze shift interval in seconds
@@ -67,6 +67,25 @@ function init() {
 
 // Generate a random maze
 function generateMaze() {
+    maze = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(1));
+
+    function carvePath(x, y) {
+        const directions = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+        directions.sort(() => Math.random() - 0.5); // Shuffle directions for randomness
+
+        maze[y][x] = 0; // Create a path
+
+        for (const [dx, dy] of directions) {
+            const nx = x + dx * 2, ny = y + dy * 2;
+            if (nx > 0 && ny > 0 && nx < GRID_SIZE - 1 && ny < GRID_SIZE - 1 && maze[ny][nx] === 1) {
+                maze[y + dy][x + dx] = 0; // Remove wall
+                carvePath(nx, ny);
+            }
+        }
+    }
+
+    carvePath(1, 1); // Start carving from (1,1)
+    
     maze = [];
     
     // Calculate wall density based on level (increasing difficulty)
@@ -202,6 +221,28 @@ function addGhost() {
 
 // Move ghosts
 function moveGhosts() {
+    for (const ghost of ghosts) {
+        const validMoves = [];
+        const directions = [
+            { x: 0, y: -1 }, // Up
+            { x: 0, y: 1 },  // Down
+            { x: -1, y: 0 }, // Left
+            { x: 1, y: 0 }   // Right
+        ];
+
+        for (const dir of directions) {
+            if (isValidMove(ghost.x + dir.x, ghost.y + dir.y)) {
+                validMoves.push(dir);
+            }
+        }
+
+        if (validMoves.length > 0) {
+            const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+            ghost.x += randomMove.x;
+            ghost.y += randomMove.y;
+        }
+    }
+    
     for (let i = 0; i < ghosts.length; i++) {
         const ghost = ghosts[i];
         
@@ -329,6 +370,28 @@ function movePlayer(dx, dy) {
 // Level up
 function levelUp() {
     level++;
+
+    document.getElementById('level').textContent = level;
+
+    const levelModifiers = [];
+    if (shiftInterval > MIN_SHIFT_INTERVAL) levelModifiers.push(() => shiftInterval--);
+    if (level % 3 === 0 && ghosts.length < 4) levelModifiers.push(() => addGhost());
+    if (level % 2 === 0) levelModifiers.push(() => increaseWallDensity());
+
+    if (level >= 15) levelModifiers.push(() => enableGhostPathfinding());
+
+    const randomModifier = levelModifiers[Math.floor(Math.random() * levelModifiers.length)];
+    if (randomModifier) randomModifier();
+
+    timer = shiftInterval;
+    document.getElementById('timer').textContent = timer;
+
+    generateMaze();
+    maze[player.y][player.x] = 0;
+    placeGoal();
+    updateGhosts();
+    
+    level++;
     
     // Update UI
     document.getElementById('level').textContent = level;
@@ -408,6 +471,19 @@ function startCountdown() {
 
 // Shift the maze
 function shiftMaze() {
+    const playerX = player.x, playerY = player.y;
+    const goalX = goal.x, goalY = goal.y;
+    const ghostPositions = ghosts.map(g => ({ x: g.x, y: g.y }));
+
+    generateMaze();
+
+    player.x = playerX;
+    player.y = playerY;
+    goal.x = goalX;
+    goal.y = goalY;
+
+    ghosts = ghostPositions.map(pos => ({ x: pos.x, y: pos.y }));
+    
     // Remember player position
     const playerX = player.x;
     const playerY = player.y;
@@ -459,6 +535,30 @@ function draw() {
 
 // End the game
 function endGame() {
+    gameOver = true;
+    gameOverSound.play();
+
+    draw(); // Redraw game before showing screen
+
+    // Find the ghost that caught the player
+    const caughtGhost = ghosts.find(g => g.x === player.x && g.y === player.y);
+    if (caughtGhost) {
+        ctx.drawImage(ghostImg, player.x * CELL_SIZE, player.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+    }
+
+    setTimeout(() => {
+        document.getElementById('gameOverScreen').innerHTML = `
+            <div class="game-over-content">
+                <h2>Game Over!</h2>
+                <p>Level Reached: ${level}</p>
+                <p>Steps Taken: ${stepsCount}</p>
+                <p>Time Elapsed: ${Math.floor(totalTime / 60)}m ${totalTime % 60}s</p>
+                <button id="playAgainBtn">Play Again</button>
+            </div>
+        `;
+        document.getElementById('gameOverScreen').style.display = 'flex';
+    }, 1000);
+    
     // Set game over flag
     gameOver = true;
     
