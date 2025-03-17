@@ -54,6 +54,10 @@ body {
 }
 
 #gameCanvas {
+    border: 5px solid #000; /* Increased thickness for better visibility */
+    display: block;
+    margin: auto; /* Center the canvas */
+    
     border: 3px solid #333;
     background-color: #fff;
     border-radius: 5px;
@@ -187,6 +191,10 @@ body {
     }
     
     #gameCanvas {
+    border: 5px solid #000; /* Increased thickness for better visibility */
+    display: block;
+    margin: auto; /* Center the canvas */
+    
         width: 100%;
         height: auto;
     }
